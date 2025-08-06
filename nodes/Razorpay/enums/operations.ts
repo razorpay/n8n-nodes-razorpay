@@ -12,8 +12,6 @@ export enum Operation {
 	FETCH_ALL_ORDERS = 'fetchAllOrders',
 	CREATE_PAYMENT_LINK = 'createPaymentLink',
 	FETCH_PAYMENT_LINK = 'fetchPaymentLink',
-	RESEND_PAYMENT_LINK_NOTIFICATION = 'resendPaymentLinkNotification',
-	CREATE_REFUND = 'createRefund',
 	FETCH_ALL_REFUNDS = 'fetchAllRefunds',
 	FETCH_PAYMENT = 'fetchPayment',
 	FETCH_ALL_PAYMENTS = 'fetchAllPayments',
@@ -83,12 +81,6 @@ export const PAYMENT_LINK_OPERATIONS = [
 		description: 'Fetch payment link details by ID',
 		action: 'Fetch a payment link',
 	},
-	{
-		name: 'Resend Notification',
-		value: Operation.RESEND_PAYMENT_LINK_NOTIFICATION,
-		description: 'Send or resend payment link notifications via email or SMS',
-		action: 'Resend a payment link notification',
-	},
 ];
 
 export const PAYMENT_OPERATIONS = [
@@ -107,12 +99,6 @@ export const PAYMENT_OPERATIONS = [
 ];
 
 export const REFUND_OPERATIONS = [
-	{
-		name: 'Create',
-		value: Operation.CREATE_REFUND,
-		description: 'Create a refund for a payment',
-		action: 'Create a refund',
-	},
 	{
 		name: 'Fetch All',
 		value: Operation.FETCH_ALL_REFUNDS,

@@ -1,5 +1,5 @@
 {
-  "name": "n8n-nodes-razorpay",
+  "name": "@razorpay/n8n-nodes-razorpay",
   "version": "0.1.0",
   "description": "Razorpay n8n node for payment processing",
   "keywords": [

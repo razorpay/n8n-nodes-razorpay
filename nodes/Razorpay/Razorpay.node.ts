@@ -13,10 +13,6 @@ import {
 	executeCreatePaymentLink,
 	fetchPaymentLinkDescription,
 	executeFetchPaymentLink,
-	resendPaymentLinkNotificationDescription,
-	executeResendPaymentLinkNotification,
-	createRefundDescription,
-	executeCreateRefund,
 	fetchAllRefundsDescription,
 	executeFetchAllRefunds,
 	fetchPaymentDescription,
@@ -170,7 +166,7 @@ export class Razorpay implements INodeType {
 				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
-				default: 'createRefund',
+				default: 'fetchAllRefunds',
 				displayOptions: {
 					show: {
 						resource: [Resource.REFUND],
@@ -235,8 +231,6 @@ export class Razorpay implements INodeType {
 			...fetchAllOrdersDescription,
 			...createPaymentLinkDescription,
 			...fetchPaymentLinkDescription,
-			...resendPaymentLinkNotificationDescription,
-			...createRefundDescription,
 			...fetchAllRefundsDescription,
 			...fetchPaymentDescription,
 			...fetchAllPaymentsDescription,
@@ -265,12 +259,6 @@ export class Razorpay implements INodeType {
 						break;
 					case Operation.FETCH_PAYMENT_LINK:
 						result = await executeFetchPaymentLink.call(this, itemIndex);
-						break;
-					case Operation.RESEND_PAYMENT_LINK_NOTIFICATION:
-						result = await executeResendPaymentLinkNotification.call(this, itemIndex);
-						break;
-					case Operation.CREATE_REFUND:
-						result = await executeCreateRefund.call(this, itemIndex);
 						break;
 					case Operation.FETCH_ALL_REFUNDS:
 						result = await executeFetchAllRefunds.call(this, itemIndex);

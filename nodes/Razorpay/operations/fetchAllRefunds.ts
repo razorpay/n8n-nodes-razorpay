@@ -1,5 +1,9 @@
-import type { INodeProperties, IExecuteFunctions } from 'n8n-workflow';
+import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+
+import { Operation } from '../enums';
+import { API_ENDPOINTS, DOCUMENTATION_URLS } from '../constants';
+import { getCurrentTimestamp } from '../utils';
 
 export const fetchAllRefundsDescription: INodeProperties[] = [
 	// =======================
@@ -12,7 +16,7 @@ export const fetchAllRefundsDescription: INodeProperties[] = [
 		placeholder: 'Add Option',
 		displayOptions: {
 			show: {
-				operation: ['fetchAllRefunds'],
+				operation: [Operation.FETCH_ALL_REFUNDS],
 			},
 		},
 		default: {},
@@ -39,7 +43,7 @@ export const fetchAllRefundsDescription: INodeProperties[] = [
 				type: 'number',
 				default: 10,
 				placeholder: '10',
-				description: 'Number of refunds to fetch (1 to 100)',
+				description: 'The number of refunds to fetch. You can fetch a maximum of 100 refunds. Default is 10.',
 				typeOptions: {
 					minValue: 1,
 					maxValue: 100,
@@ -51,7 +55,7 @@ export const fetchAllRefundsDescription: INodeProperties[] = [
 				type: 'number',
 				default: 0,
 				placeholder: '0',
-				description: 'Number of refunds to be skipped for pagination',
+				description: 'The number of refunds to be skipped (for pagination purposes)',
 				typeOptions: {
 					minValue: 0,
 				},
@@ -65,7 +69,6 @@ export async function executeFetchAllRefunds(
 	itemIndex: number,
 ): Promise<any> {
 	try {
-		const credentials = await this.getCredentials('razorpayApi');
 		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as any;
 
 		// Build query parameters
@@ -98,22 +101,32 @@ export async function executeFetchAllRefunds(
 		}
 
 		const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-		const url = `https://api.razorpay.com/v1/refunds${queryString}`;
+		const url = `${API_ENDPOINTS.REFUNDS}${queryString}`;
 
-		// Prepare basic auth
-		const auth = Buffer.from(`${credentials.keyId}:${credentials.keySecret}`).toString('base64');
-
-		// Make API request
-		const response = await this.helpers.httpRequest({
+		// Make API request using n8n's authentication helper
+		const options: IHttpRequestOptions = {
 			method: 'GET',
 			url,
-			headers: {
-				'Authorization': `Basic ${auth}`,
-				'Content-Type': 'application/json',
-			},
-		});
+			json: true,
+		};
 
-		return response;
+		const response = await this.helpers.httpRequestWithAuthentication.call(
+			this,
+			'razorpayApi',
+			options,
+		);
+
+		// Format the response with additional metadata
+		return {
+			...response,
+			// Add API call info for better debugging
+			api_info: {
+				endpoint: `GET /v1/refunds${queryString}`,
+				documentation: DOCUMENTATION_URLS.FETCH_ALL_REFUNDS,
+				timestamp: getCurrentTimestamp(),
+				total_count: response.count || 0,
+			},
+		};
 	} catch (error: any) {
 		// Handle specific Razorpay API errors
 		if (error.response?.status === 400) {

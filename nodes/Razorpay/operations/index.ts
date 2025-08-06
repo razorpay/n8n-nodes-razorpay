@@ -1,8 +1,6 @@
 export { fetchAllOrdersDescription, executeFetchAllOrders } from './fetchAllOrders';
 export { createPaymentLinkDescription, executeCreatePaymentLink } from './createPaymentLink';
 export { fetchPaymentLinkDescription, executeFetchPaymentLink } from './fetchPaymentLink';
-export { resendPaymentLinkNotificationDescription, executeResendPaymentLinkNotification } from './resendPaymentLinkNotification';
-export { createRefundDescription, executeCreateRefund } from './createRefund';
 export { fetchAllRefundsDescription, executeFetchAllRefunds } from './fetchAllRefunds';
 export { fetchPaymentDescription, executeFetchPayment } from './fetchPayment';
 export { fetchAllPaymentsDescription, executeFetchAllPayments } from './fetchAllPayments';

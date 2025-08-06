@@ -2,7 +2,8 @@
 export const API_ENDPOINTS = {
 	ORDERS: 'https://api.razorpay.com/v1/orders',
 	PAYMENT_LINKS: 'https://api.razorpay.com/v1/payment_links',
-	REFUNDS: 'https://api.razorpay.com/v1/payments',
+	REFUNDS: 'https://api.razorpay.com/v1/refunds',
+	PAYMENTS: 'https://api.razorpay.com/v1/payments',
 } as const;
 
 // Documentation URLs
@@ -10,6 +11,7 @@ export const DOCUMENTATION_URLS = {
 	CREATE_ORDER: 'https://razorpay.com/docs/api/orders/create/',
 	CREATE_PAYMENT_LINK: 'https://razorpay.com/docs/api/payments/payment-links/create-standard/',
 	CREATE_REFUND: 'https://razorpay.com/docs/api/refunds/create-normal/',
+	FETCH_ALL_REFUNDS: 'https://razorpay.com/docs/api/refunds/fetch-all/',
 } as const;
 
 // Validation Limits
