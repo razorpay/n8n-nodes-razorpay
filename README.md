@@ -1,6 +1,6 @@
 # n8n-nodes-razorpay
 
-This is an n8n community node. It lets you use _app/service name_ in your n8n workflows.
+This is an n8n community node. It lets you use razorpay in your n8n workflows.
 
 _App/service name_ is _one or two sentences describing the service this node integrates with_.
 
@@ -28,7 +28,7 @@ _If users need to authenticate with the app/service, provide details here. You s
 
 ## Compatibility
 
-_State the minimum n8n version, as well as which versions you test against. You can also include any known version incompatibility issues._
+Tested locally against n8n v1.104.2.
 
 ## Usage
 
