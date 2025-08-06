@@ -54,7 +54,7 @@ export const ERROR_MESSAGES = {
 export const NODE_CONFIG = {
 	DISPLAY_NAME: 'Razorpay',
 	NAME: 'razorpay',
-	ICON: 'fa:credit-card',
+	ICON: 'file:assets/razorpay-glyph.svg',
 	GROUP: ['transform'],
 	VERSION: 1,
 	SUBTITLE: '={{$parameter["operation"]}}',
