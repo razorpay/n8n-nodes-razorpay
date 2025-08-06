@@ -8,9 +8,9 @@ Razorpay is a comprehensive payment solution that allows businesses to accept, p
 
 [Installation](#installation)  
 [Operations](#operations)  
-[Credentials](#credentials) 
+[Credentials](#credentials)  
 [Compatibility](#compatibility)  
-[Usage](#usage) 
+[Usage](#usage)  
 [Resources](#resources)  
 
 ## Installation
