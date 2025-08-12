@@ -1,5 +1,7 @@
 import type { INodeProperties, IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { getUserAgent } from '../utils';
+import type { PaymentListResponse, FetchOptions } from '../types';
 
 export const fetchAllPaymentsDescription: INodeProperties[] = [
 	// =======================
@@ -59,10 +61,10 @@ export const fetchAllPaymentsDescription: INodeProperties[] = [
 export async function executeFetchAllPayments(
 	this: IExecuteFunctions,
 	itemIndex: number,
-): Promise<any> {
+): Promise<PaymentListResponse> {
 	try {
 		const credentials = await this.getCredentials('razorpayApi');
-		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as any;
+		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as FetchOptions;
 
 		// Build query parameters
 		const queryParams: string[] = [];
@@ -100,14 +102,16 @@ export async function executeFetchAllPayments(
 			headers: {
 				'Authorization': `Basic ${auth}`,
 				'Content-Type': 'application/json',
+				'User-Agent': getUserAgent(),
 			},
 		});
 
 		return response;
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const err = error as any; // Temporary for error handling
 		// Handle specific Razorpay API errors
-		if (error.response?.status === 400) {
-			const errorDescription = error.response.data?.error?.description;
+		if (err.response?.status === 400) {
+			const errorDescription = err.response.data?.error?.description;
 			
 			// Handle specific error for invalid time range
 			if (errorDescription?.includes('from must be between')) {
@@ -125,7 +129,7 @@ export async function executeFetchAllPayments(
 			);
 		}
 		
-		if (error.response?.status === 401) {
+		if (err.response?.status === 401) {
 			throw new NodeOperationError(
 				this.getNode(),
 				'Unauthorized: Invalid API credentials. Please check your Razorpay API key and secret.',
@@ -134,8 +138,8 @@ export async function executeFetchAllPayments(
 		}
 
 		// Generic error handling
-		const errorMessage = error.response?.data?.error?.description 
-			|| error.message 
+		const errorMessage = err.response?.data?.error?.description 
+			|| err.message 
 			|| 'An error occurred while fetching payments';
 
 		throw new NodeOperationError(this.getNode(), errorMessage, { itemIndex });

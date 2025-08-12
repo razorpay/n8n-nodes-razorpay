@@ -3,7 +3,8 @@ import { NodeOperationError } from 'n8n-workflow';
 
 import { Operation } from '../enums';
 import { API_ENDPOINTS, DOCUMENTATION_URLS } from '../constants';
-import { getCurrentTimestamp } from '../utils';
+import { getCurrentTimestamp, getUserAgent } from '../utils';
+import type { RefundListResponse, FetchOptions } from '../types';
 
 export const fetchAllRefundsDescription: INodeProperties[] = [
 	// =======================
@@ -67,9 +68,9 @@ export const fetchAllRefundsDescription: INodeProperties[] = [
 export async function executeFetchAllRefunds(
 	this: IExecuteFunctions,
 	itemIndex: number,
-): Promise<any> {
+): Promise<RefundListResponse> {
 	try {
-		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as any;
+		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as FetchOptions;
 
 		// Build query parameters
 		const queryParams: string[] = [];
@@ -108,6 +109,9 @@ export async function executeFetchAllRefunds(
 			method: 'GET',
 			url,
 			json: true,
+			headers: {
+				'User-Agent': getUserAgent(),
+			},
 		};
 
 		const response = await this.helpers.httpRequestWithAuthentication.call(
@@ -127,10 +131,11 @@ export async function executeFetchAllRefunds(
 				total_count: response.count || 0,
 			},
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const err = error as any; // Temporary for error handling
 		// Handle specific Razorpay API errors
-		if (error.response?.status === 400) {
-			const errorDesc = error.response.data?.error?.description;
+		if (err.response?.status === 400) {
+			const errorDesc = err.response.data?.error?.description;
 			if (errorDesc?.includes('payment id field is required')) {
 				throw new NodeOperationError(
 					this.getNode(),
@@ -145,7 +150,7 @@ export async function executeFetchAllRefunds(
 			);
 		}
 		
-		if (error.response?.status === 401) {
+		if (err.response?.status === 401) {
 			throw new NodeOperationError(
 				this.getNode(),
 				'Unauthorized: Invalid API credentials. Please check your Razorpay API key and secret.',
@@ -153,7 +158,7 @@ export async function executeFetchAllRefunds(
 			);
 		}
 
-		if (error.response?.status === 404) {
+		if (err.response?.status === 404) {
 			throw new NodeOperationError(
 				this.getNode(),
 				'Not Found: The requested URL was not found on the server. Please check the endpoint.',
@@ -162,8 +167,8 @@ export async function executeFetchAllRefunds(
 		}
 
 		// Generic error handling
-		const errorMessage = error.response?.data?.error?.description 
-			|| error.message 
+		const errorMessage = err.response?.data?.error?.description 
+			|| err.message 
 			|| 'An error occurred while fetching refunds';
 
 		throw new NodeOperationError(this.getNode(), errorMessage, { itemIndex });

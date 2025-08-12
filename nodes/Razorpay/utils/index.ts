@@ -8,4 +8,5 @@ export {
 	validatePaymentId,
 	validateRefundAmount
 } from './validators';
-export { formatAmount, formatTimestamp, getCurrentTimestamp } from './formatters'; 
+export { formatAmount, formatTimestamp, getCurrentTimestamp } from './formatters';
+export { getUserAgent, getSimpleUserAgent } from './userAgent'; 

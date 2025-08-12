@@ -1,5 +1,6 @@
 import { ApplicationError } from 'n8n-workflow';
 import { VALIDATION_LIMITS, ERROR_MESSAGES } from '../constants';
+import type { NoteItem } from '../types';
 
 /**
  * Validate amount is above minimum threshold
@@ -40,7 +41,7 @@ export function validateDescription(description: string): void {
 /**
  * Validate notes structure and limits
  */
-export function validateNotes(notes: any[]): Record<string, string> {
+export function validateNotes(notes: NoteItem[]): Record<string, string> {
 	const processedNotes: Record<string, string> = {};
 	
 	for (const note of notes) {

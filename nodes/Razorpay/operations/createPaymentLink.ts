@@ -1,4 +1,10 @@
 import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
+import type { 
+	PaymentLinkResponse, 
+	CreatePaymentLinkBody, 
+	CustomerDetailsInput, 
+	PaymentLinkAdditionalOptions 
+} from '../types';
 
 import { CURRENCY_OPTIONS, Operation } from '../enums';
 import { API_ENDPOINTS, DOCUMENTATION_URLS } from '../constants';
@@ -10,7 +16,8 @@ import {
 	validateUrl,
 	formatAmount, 
 	formatTimestamp, 
-	getCurrentTimestamp 
+	getCurrentTimestamp,
+	getUserAgent
 } from '../utils';
 
 export const createPaymentLinkDescription: INodeProperties[] = [
@@ -228,20 +235,20 @@ export const createPaymentLinkDescription: INodeProperties[] = [
 	},
 ];
 
-export async function executeCreatePaymentLink(this: IExecuteFunctions, itemIndex: number): Promise<any> {
+export async function executeCreatePaymentLink(this: IExecuteFunctions, itemIndex: number): Promise<PaymentLinkResponse> {
 
 	const amount = this.getNodeParameter('amount', itemIndex) as number;
 	const currency = this.getNodeParameter('currency', itemIndex) as string;
 	const description = this.getNodeParameter('description', itemIndex) as string;
 	const reference_id = this.getNodeParameter('reference_id', itemIndex) as string;
-	const customerDetails = this.getNodeParameter('customerDetails', itemIndex) as any;
-	const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex) as any;
+	const customerDetails = this.getNodeParameter('customerDetails', itemIndex) as CustomerDetailsInput;
+	const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex) as PaymentLinkAdditionalOptions;
 
 	validateAmount(amount);
 	validateDescription(description);
 	validateReferenceId(reference_id);
 
-	const body: any = {
+	const body: CreatePaymentLinkBody = {
 		amount,
 		currency,
 	};
@@ -290,7 +297,7 @@ export async function executeCreatePaymentLink(this: IExecuteFunctions, itemInde
 		body.callback_method = additionalOptions.callback_method || 'get';
 	}
 
-	if (additionalOptions.notes?.note && additionalOptions.notes.note.length > 0) {
+	if (additionalOptions.notes?.note && Array.isArray(additionalOptions.notes.note) && additionalOptions.notes.note.length > 0) {
 		const notes = validateNotes(additionalOptions.notes.note);
 		if (Object.keys(notes).length > 0) {
 			body.notes = notes;
@@ -302,6 +309,9 @@ export async function executeCreatePaymentLink(this: IExecuteFunctions, itemInde
 		url: API_ENDPOINTS.PAYMENT_LINKS,
 		body,
 		json: true,
+		headers: {
+			'User-Agent': getUserAgent(),
+		},
 	};
 
 	const response = await this.helpers.httpRequestWithAuthentication.call(

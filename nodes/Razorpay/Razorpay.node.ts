@@ -248,7 +248,7 @@ export class Razorpay implements INodeType {
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
 				const operation = this.getNodeParameter('operation', itemIndex) as string;
-				let result: any;
+				let result: any; // Using any here for n8n compatibility - n8n handles type conversion internally
 
 				switch (operation) {
 					case Operation.FETCH_ALL_ORDERS:

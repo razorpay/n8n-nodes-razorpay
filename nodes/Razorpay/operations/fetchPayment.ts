@@ -1,5 +1,7 @@
 import type { INodeProperties, IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { getUserAgent } from '../utils';
+import type { PaymentResponse, FetchOptions } from '../types';
 
 export const fetchPaymentDescription: INodeProperties[] = [
 	// =======================
@@ -66,11 +68,11 @@ export const fetchPaymentDescription: INodeProperties[] = [
 export async function executeFetchPayment(
 	this: IExecuteFunctions,
 	itemIndex: number,
-): Promise<any> {
+): Promise<PaymentResponse> {
 	try {
 		const credentials = await this.getCredentials('razorpayApi');
 		const paymentId = this.getNodeParameter('paymentId', itemIndex) as string;
-		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as any;
+		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as FetchOptions;
 
 		// Validate payment ID format
 		if (!paymentId || !paymentId.startsWith('pay_')) {
@@ -109,21 +111,23 @@ export async function executeFetchPayment(
 			headers: {
 				'Authorization': `Basic ${auth}`,
 				'Content-Type': 'application/json',
+				'User-Agent': getUserAgent(),
 			},
 		});
 
 		return response;
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const err = error as any; // Temporary for error handling
 		// Handle specific Razorpay API errors
-		if (error.response?.status === 400) {
+		if (err.response?.status === 400) {
 			throw new NodeOperationError(
 				this.getNode(),
-				`Bad Request: ${error.response.data?.error?.description || 'Invalid payment ID or request parameters'}`,
+				`Bad Request: ${err.response.data?.error?.description || 'Invalid payment ID or request parameters'}`,
 				{ itemIndex }
 			);
 		}
 		
-		if (error.response?.status === 401) {
+		if (err.response?.status === 401) {
 			throw new NodeOperationError(
 				this.getNode(),
 				'Unauthorized: Invalid API credentials. Please check your Razorpay API key and secret.',
@@ -131,7 +135,7 @@ export async function executeFetchPayment(
 			);
 		}
 
-		if (error.response?.status === 404) {
+		if (err.response?.status === 404) {
 			throw new NodeOperationError(
 				this.getNode(),
 				`Payment not found: The payment ID "${this.getNodeParameter('paymentId', itemIndex)}" does not exist.`,
@@ -140,8 +144,8 @@ export async function executeFetchPayment(
 		}
 
 		// Generic error handling
-		const errorMessage = error.response?.data?.error?.description 
-			|| error.message 
+		const errorMessage = err.response?.data?.error?.description 
+			|| err.message 
 			|| 'An error occurred while fetching the payment';
 
 		throw new NodeOperationError(this.getNode(), errorMessage, { itemIndex });

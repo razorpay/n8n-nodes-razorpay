@@ -1,5 +1,7 @@
 import type { INodeProperties, IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
+import { getUserAgent } from '../utils';
+import type { SettlementResponse } from '../types';
 
 export const fetchSettlementDescription: INodeProperties[] = [
 	// =======================
@@ -24,7 +26,7 @@ export const fetchSettlementDescription: INodeProperties[] = [
 export async function executeFetchSettlement(
 	this: IExecuteFunctions,
 	itemIndex: number,
-): Promise<any> {
+): Promise<SettlementResponse> {
 	try {
 		const credentials = await this.getCredentials('razorpayApi');
 		const settlementId = this.getNodeParameter('settlementId', itemIndex) as string;
@@ -50,21 +52,23 @@ export async function executeFetchSettlement(
 			headers: {
 				'Authorization': `Basic ${auth}`,
 				'Content-Type': 'application/json',
+				'User-Agent': getUserAgent(),
 			},
 		});
 
 		return response;
-	} catch (error: any) {
+	} catch (error: unknown) {
+		const err = error as any; // Temporary for error handling
 		// Handle specific Razorpay API errors
-		if (error.response?.status === 400) {
+		if (err.response?.status === 400) {
 			throw new NodeOperationError(
 				this.getNode(),
-				`Bad Request: ${error.response.data?.error?.description || 'Invalid settlement ID or request parameters'}`,
+				`Bad Request: ${err.response.data?.error?.description || 'Invalid settlement ID or request parameters'}`,
 				{ itemIndex }
 			);
 		}
 		
-		if (error.response?.status === 401) {
+		if (err.response?.status === 401) {
 			throw new NodeOperationError(
 				this.getNode(),
 				'Unauthorized: Invalid API credentials. Please check your Razorpay API key and secret.',
@@ -72,7 +76,7 @@ export async function executeFetchSettlement(
 			);
 		}
 
-		if (error.response?.status === 404) {
+		if (err.response?.status === 404) {
 			throw new NodeOperationError(
 				this.getNode(),
 				`Settlement not found: The settlement ID "${this.getNodeParameter('settlementId', itemIndex)}" does not exist or does not belong to your account.`,
@@ -81,8 +85,8 @@ export async function executeFetchSettlement(
 		}
 
 		// Generic error handling
-		const errorMessage = error.response?.data?.error?.description 
-			|| error.message 
+		const errorMessage = err.response?.data?.error?.description 
+			|| err.message 
 			|| 'An error occurred while fetching the settlement';
 
 		throw new NodeOperationError(this.getNode(), errorMessage, { itemIndex });
