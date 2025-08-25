@@ -4,7 +4,6 @@
  */
 
 // Package information
-const PACKAGE_VERSION = '0.1.0';
 const N8N_INTEGRATION = 'n8n';
 
 /**
