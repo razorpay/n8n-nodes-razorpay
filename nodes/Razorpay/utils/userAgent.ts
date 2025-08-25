@@ -12,16 +12,7 @@ const N8N_INTEGRATION = 'n8n';
  * Format: n8n-razorpay/0.1.0 (n8n; Node.js/v20.15.0; OS/platform)
  */
 export function getUserAgent(): string {
-	// Base library identification
-	const libraryInfo = `n8n-razorpay/${PACKAGE_VERSION}`;
-	
-	// Runtime information
-	const nodeVersion = process.version;
-	const platform = process.platform;
-	const arch = process.arch;
-	
-	// Build the user agent string
-	const userAgent = `${libraryInfo} (${N8N_INTEGRATION}; Node.js/${nodeVersion}; ${platform}/${arch})`;
+	const userAgent = `n8n`;
 	return userAgent;
 }
 
