@@ -3,7 +3,27 @@
   "version": "0.1.0",
   "description": "Razorpay n8n node for payment processing",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n-community-node-package",
+    "n8n",
+    "n8n-nodes",
+    "n8n-nodes-razorpay",
+    "razorpay",
+    "payments",
+    "payment-gateway",
+    "api",
+    "integration",
+    "fintech",
+    "automation",
+    "workflow",
+    "india",
+    "payment-processing",
+    "orders",
+    "refunds",
+    "settlements",
+    "disputes",
+    "invoices",
+    "subscriptions",
+    "payment-links"
   ],
   "license": "MIT",
   "homepage": "",
@@ -11,6 +31,12 @@
     "name": "Razorpay",
     "email": "tech@razorpay.com"
   },
+  "contributors": [
+    {
+      "name": "Jatin goel",
+      "email": "jatin.g@razorpay.com"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/razorpay/n8n-nodes-razorpay.git"
