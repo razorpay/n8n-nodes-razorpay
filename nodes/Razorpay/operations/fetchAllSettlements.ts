@@ -1,4 +1,4 @@
-import type { INodeProperties, IExecuteFunctions } from 'n8n-workflow';
+import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { getUserAgent } from '../utils';
 import type { SettlementListResponse, FetchOptions } from '../types';
@@ -67,7 +67,6 @@ export async function executeFetchAllSettlements(
 	itemIndex: number,
 ): Promise<SettlementListResponse> {
 	try {
-		const credentials = await this.getCredentials('razorpayApi');
 		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as FetchOptions;
 
 		// Build query parameters
@@ -118,19 +117,21 @@ export async function executeFetchAllSettlements(
 		const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
 		const url = `https://api.razorpay.com/v1/settlements/${queryString}`;
 
-		// Prepare basic auth
-		const auth = Buffer.from(`${credentials.keyId}:${credentials.keySecret}`).toString('base64');
-
-		// Make API request
-		const response = await this.helpers.httpRequest({
+		// Make API request using n8n's authentication helper
+		const options: IHttpRequestOptions = {
 			method: 'GET',
 			url,
+			json: true,
 			headers: {
-				'Authorization': `Basic ${auth}`,
-				'Content-Type': 'application/json',
 				'User-Agent': getUserAgent(),
 			},
-		});
+		};
+
+		const response = await this.helpers.httpRequestWithAuthentication.call(
+			this,
+			'razorpayApi',
+			options,
+		);
 
 		return response;
 	} catch (error: unknown) {
