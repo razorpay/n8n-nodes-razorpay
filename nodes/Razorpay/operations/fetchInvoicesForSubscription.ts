@@ -1,4 +1,4 @@
-import type { INodeProperties, IExecuteFunctions } from 'n8n-workflow';
+import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 import { getUserAgent } from '../utils';
 import type { InvoiceListResponse } from '../types';
@@ -28,7 +28,6 @@ export async function executeFetchInvoicesForSubscription(
 	itemIndex: number,
 ): Promise<InvoiceListResponse> {
 	try {
-		const credentials = await this.getCredentials('razorpayApi');
 		const subscriptionId = this.getNodeParameter('subscriptionId', itemIndex) as string;
 
 		// Validate subscription ID format
@@ -42,19 +41,21 @@ export async function executeFetchInvoicesForSubscription(
 
 		const url = `https://api.razorpay.com/v1/invoices?subscription_id=${subscriptionId}`;
 
-		// Prepare basic auth
-		const auth = Buffer.from(`${credentials.keyId}:${credentials.keySecret}`).toString('base64');
-
-		// Make API request
-		const response = await this.helpers.httpRequest({
+		// Make API request using n8n's authentication helper
+		const options: IHttpRequestOptions = {
 			method: 'GET',
 			url,
+			json: true,
 			headers: {
-				'Authorization': `Basic ${auth}`,
-				'Content-Type': 'application/json',
 				'User-Agent': getUserAgent(),
 			},
-		});
+		};
+
+		const response = await this.helpers.httpRequestWithAuthentication.call(
+			this,
+			'razorpayApi',
+			options,
+		);
 
 		return response;
 	} catch (error: unknown) {
