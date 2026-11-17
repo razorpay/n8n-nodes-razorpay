@@ -1,6 +1,7 @@
 import { ApplicationError } from 'n8n-workflow';
 import { VALIDATION_LIMITS, ERROR_MESSAGES } from '../constants';
 import type { NoteItem } from '../types';
+import { isValidRazorpayId } from './request';
 
 /**
  * Validate amount is above minimum threshold
@@ -81,8 +82,7 @@ export function validatePaymentId(paymentId: string): void {
 	}
 	
 	// Razorpay payment IDs start with 'pay_' followed by alphanumeric characters (typically 14+ chars)
-	const paymentIdPattern = /^pay_[A-Za-z0-9]{10,}$/;
-	if (!paymentIdPattern.test(paymentId)) {
+	if (!isValidRazorpayId(paymentId, 'pay')) {
 		throw new ApplicationError('Invalid payment ID format. Payment ID should start with "pay_" followed by alphanumeric characters');
 	}
 }

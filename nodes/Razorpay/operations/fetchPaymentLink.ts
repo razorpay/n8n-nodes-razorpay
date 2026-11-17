@@ -1,6 +1,7 @@
 import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { getUserAgent } from '../utils';
+import { getUserAgent, isValidRazorpayId, appendPathSegment } from '../utils';
+import { API_ENDPOINTS } from '../constants';
 import type { PaymentLinkResponse } from '../types';
 
 export const fetchPaymentLinkDescription: INodeProperties[] = [
@@ -31,15 +32,15 @@ export async function executeFetchPaymentLink(
 		const paymentLinkId = this.getNodeParameter('paymentLinkId', itemIndex) as string;
 
 		// Validate payment link ID format
-		if (!paymentLinkId || !paymentLinkId.startsWith('plink_')) {
+		if (!isValidRazorpayId(paymentLinkId, 'plink')) {
 			throw new NodeOperationError(
 				this.getNode(),
-				'Invalid Payment Link ID format. Payment Link ID should start with "plink_"',
+				'Invalid Payment Link ID format. Payment Link ID should start with "plink_" followed by alphanumeric characters',
 				{ itemIndex }
 			);
 		}
 
-		const url = `https://api.razorpay.com/v1/payment_links/${paymentLinkId}`;
+		const url = appendPathSegment(API_ENDPOINTS.PAYMENT_LINKS, paymentLinkId);
 
 		// Make API request using n8n's authentication helper
 		const options: IHttpRequestOptions = {

@@ -1,6 +1,7 @@
 import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { getUserAgent } from '../utils';
+import { getUserAgent, isValidRazorpayId, buildApiUrl } from '../utils';
+import { API_ENDPOINTS } from '../constants';
 import type { InvoiceListResponse } from '../types';
 
 export const fetchInvoicesForSubscriptionDescription: INodeProperties[] = [
@@ -31,15 +32,15 @@ export async function executeFetchInvoicesForSubscription(
 		const subscriptionId = this.getNodeParameter('subscriptionId', itemIndex) as string;
 
 		// Validate subscription ID format
-		if (!subscriptionId || !subscriptionId.startsWith('sub_')) {
+		if (!isValidRazorpayId(subscriptionId, 'sub')) {
 			throw new NodeOperationError(
 				this.getNode(),
-				'Invalid Subscription ID format. Subscription ID should start with "sub_"',
+				'Invalid Subscription ID format. Subscription ID should start with "sub_" followed by alphanumeric characters',
 				{ itemIndex }
 			);
 		}
 
-		const url = `https://api.razorpay.com/v1/invoices?subscription_id=${subscriptionId}`;
+		const url = buildApiUrl(API_ENDPOINTS.INVOICES, { subscription_id: subscriptionId });
 
 		// Make API request using n8n's authentication helper
 		const options: IHttpRequestOptions = {

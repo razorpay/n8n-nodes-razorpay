@@ -1,6 +1,7 @@
 import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { getUserAgent } from '../utils';
+import { buildApiUrl, getUserAgent, toBoundedInteger, toUnixTimestamp } from '../utils';
+import { API_ENDPOINTS, LIST_QUERY_LIMITS } from '../constants';
 import type { PaymentListResponse, FetchOptions } from '../types';
 
 export const fetchAllPaymentsDescription: INodeProperties[] = [
@@ -65,31 +66,20 @@ export async function executeFetchAllPayments(
 	try {
 		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as FetchOptions;
 
-		// Build query parameters
-		const queryParams: string[] = [];
+		const query = {
+			from: additionalOptions.from ? toUnixTimestamp(additionalOptions.from, 'From Date') : undefined,
+			to: additionalOptions.to ? toUnixTimestamp(additionalOptions.to, 'To Date') : undefined,
+			count:
+				additionalOptions.count !== undefined
+					? toBoundedInteger(additionalOptions.count, 'Count', LIST_QUERY_LIMITS.MIN_COUNT, LIST_QUERY_LIMITS.MAX_COUNT)
+					: undefined,
+			skip:
+				additionalOptions.skip !== undefined
+					? toBoundedInteger(additionalOptions.skip, 'Skip', LIST_QUERY_LIMITS.MIN_SKIP, LIST_QUERY_LIMITS.MAX_SKIP)
+					: undefined,
+		};
 
-		// Date range filters
-		if (additionalOptions.from) {
-			const fromTimestamp = Math.floor(new Date(additionalOptions.from).getTime() / 1000);
-			queryParams.push(`from=${fromTimestamp}`);
-		}
-
-		if (additionalOptions.to) {
-			const toTimestamp = Math.floor(new Date(additionalOptions.to).getTime() / 1000);
-			queryParams.push(`to=${toTimestamp}`);
-		}
-
-		// Pagination
-		if (additionalOptions.count !== undefined) {
-			queryParams.push(`count=${additionalOptions.count}`);
-		}
-
-		if (additionalOptions.skip !== undefined) {
-			queryParams.push(`skip=${additionalOptions.skip}`);
-		}
-
-		const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-		const url = `https://api.razorpay.com/v1/payments${queryString}`;
+		const url = buildApiUrl(API_ENDPOINTS.PAYMENTS, query);
 
 		// Make API request using n8n's authentication helper
 		const options: IHttpRequestOptions = {

@@ -2,8 +2,8 @@ import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8
 import { NodeOperationError } from 'n8n-workflow';
 
 import { Operation } from '../enums';
-import { API_ENDPOINTS, DOCUMENTATION_URLS } from '../constants';
-import { getCurrentTimestamp, getUserAgent } from '../utils';
+import { API_ENDPOINTS, DOCUMENTATION_URLS, LIST_QUERY_LIMITS } from '../constants';
+import { buildQueryString, getCurrentTimestamp, getUserAgent, toBoundedInteger } from '../utils';
 import type { RefundListResponse, FetchOptions } from '../types';
 
 export const fetchAllRefundsDescription: INodeProperties[] = [
@@ -72,36 +72,24 @@ export async function executeFetchAllRefunds(
 	try {
 		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as FetchOptions;
 
-		// Build query parameters
-		const queryParams: string[] = [];
-		
-		if (additionalOptions.from) {
-			const fromTimestamp = Number(additionalOptions.from);
-			queryParams.push(`from=${fromTimestamp}`);
-		}
+		const query = {
+			from: additionalOptions.from
+				? toBoundedInteger(additionalOptions.from, 'From', 0, Number.MAX_SAFE_INTEGER)
+				: undefined,
+			to: additionalOptions.to
+				? toBoundedInteger(additionalOptions.to, 'To', 0, Number.MAX_SAFE_INTEGER)
+				: undefined,
+			count:
+				additionalOptions.count && additionalOptions.count !== 10
+					? toBoundedInteger(additionalOptions.count, 'Count', LIST_QUERY_LIMITS.MIN_COUNT, LIST_QUERY_LIMITS.MAX_COUNT)
+					: undefined,
+			skip:
+				additionalOptions.skip
+					? toBoundedInteger(additionalOptions.skip, 'Skip', LIST_QUERY_LIMITS.MIN_SKIP, LIST_QUERY_LIMITS.MAX_SKIP) || undefined
+					: undefined,
+		};
 
-		if (additionalOptions.to) {
-			const toTimestamp = Number(additionalOptions.to);
-			queryParams.push(`to=${toTimestamp}`);
-		}
-
-		if (additionalOptions.count && additionalOptions.count !== 10) {
-			const count = Number(additionalOptions.count);
-			if (count < 1 || count > 100) {
-				throw new NodeOperationError(
-					this.getNode(),
-					'Count must be between 1 and 100',
-					{ itemIndex }
-				);
-			}
-			queryParams.push(`count=${count}`);
-		}
-
-		if (additionalOptions.skip && additionalOptions.skip > 0) {
-			queryParams.push(`skip=${additionalOptions.skip}`);
-		}
-
-		const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+		const queryString = buildQueryString(query);
 		const url = `${API_ENDPOINTS.REFUNDS}${queryString}`;
 
 		// Make API request using n8n's authentication helper
