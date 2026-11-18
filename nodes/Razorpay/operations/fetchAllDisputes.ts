@@ -1,6 +1,7 @@
 import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { getUserAgent } from '../utils';
+import { buildApiUrl, getUserAgent, toAllowedValues } from '../utils';
+import { API_ENDPOINTS, EXPAND_OPTIONS } from '../constants';
 import type { DisputeListResponse, FetchOptions } from '../types';
 
 export const fetchAllDisputesDescription: INodeProperties[] = [
@@ -49,18 +50,9 @@ export async function executeFetchAllDisputes(
 	try {
 		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as FetchOptions;
 
-		// Build query parameters
-		const queryParams: string[] = [];
-		
-		// Handle expand options
-		if (additionalOptions.expand && additionalOptions.expand.length > 0) {
-			additionalOptions.expand.forEach((expandOption: string) => {
-				queryParams.push(`expand[]=${expandOption}`);
-			});
-		}
-
-		const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-		const url = `https://api.razorpay.com/v1/disputes${queryString}`;
+		const url = buildApiUrl(API_ENDPOINTS.DISPUTES, {
+			'expand[]': toAllowedValues(additionalOptions.expand ?? [], EXPAND_OPTIONS.DISPUTES, 'Expand Details'),
+		});
 
 		// Make API request using n8n's authentication helper
 		const options: IHttpRequestOptions = {

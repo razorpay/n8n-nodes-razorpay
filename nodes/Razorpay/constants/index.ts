@@ -4,6 +4,25 @@ export const API_ENDPOINTS = {
 	PAYMENT_LINKS: 'https://api.razorpay.com/v1/payment_links',
 	REFUNDS: 'https://api.razorpay.com/v1/refunds',
 	PAYMENTS: 'https://api.razorpay.com/v1/payments',
+	DISPUTES: 'https://api.razorpay.com/v1/disputes',
+	INVOICES: 'https://api.razorpay.com/v1/invoices',
+	SETTLEMENTS: 'https://api.razorpay.com/v1/settlements',
+} as const;
+
+// List query limits
+export const LIST_QUERY_LIMITS = {
+	MIN_COUNT: 1,
+	MAX_COUNT: 100,
+	MIN_SKIP: 0,
+	MAX_SKIP: Number.MAX_SAFE_INTEGER,
+	MIN_SETTLEMENT_TIMESTAMP: 946684800,
+	MAX_SETTLEMENT_TIMESTAMP: 4765046400,
+} as const;
+
+// Allowed expand[] values per list endpoint
+export const EXPAND_OPTIONS = {
+	ORDERS: ['payments', 'payments.card'],
+	DISPUTES: ['payments', 'transaction.settlement'],
 } as const;
 
 // Documentation URLs

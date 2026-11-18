@@ -1,6 +1,7 @@
 import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { getUserAgent } from '../utils';
+import { getUserAgent, isValidRazorpayId, appendPathSegment } from '../utils';
+import { API_ENDPOINTS } from '../constants';
 import type { SettlementResponse } from '../types';
 
 export const fetchSettlementDescription: INodeProperties[] = [
@@ -31,15 +32,15 @@ export async function executeFetchSettlement(
 		const settlementId = this.getNodeParameter('settlementId', itemIndex) as string;
 
 		// Validate settlement ID format
-		if (!settlementId || !settlementId.startsWith('setl_')) {
+		if (!isValidRazorpayId(settlementId, 'setl')) {
 			throw new NodeOperationError(
 				this.getNode(),
-				'Invalid Settlement ID format. Settlement ID should start with "setl_"',
+				'Invalid Settlement ID format. Settlement ID should start with "setl_" followed by alphanumeric characters',
 				{ itemIndex }
 			);
 		}
 
-		const url = `https://api.razorpay.com/v1/settlements/${settlementId}`;
+		const url = appendPathSegment(API_ENDPOINTS.SETTLEMENTS, settlementId);
 
 		// Make API request using n8n's authentication helper
 		const options: IHttpRequestOptions = {

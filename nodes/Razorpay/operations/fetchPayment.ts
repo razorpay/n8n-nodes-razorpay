@@ -1,6 +1,7 @@
 import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { getUserAgent } from '../utils';
+import { getUserAgent, isValidRazorpayId, appendPathSegment, buildApiUrl } from '../utils';
+import { API_ENDPOINTS } from '../constants';
 import type { PaymentResponse, FetchOptions } from '../types';
 
 export const fetchPaymentDescription: INodeProperties[] = [
@@ -74,31 +75,25 @@ export async function executeFetchPayment(
 		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as FetchOptions;
 
 		// Validate payment ID format
-		if (!paymentId || !paymentId.startsWith('pay_')) {
+		if (!isValidRazorpayId(paymentId, 'pay')) {
 			throw new NodeOperationError(
 				this.getNode(),
-				'Invalid Payment ID format. Payment ID should start with "pay_"',
+				'Invalid Payment ID format. Payment ID should start with "pay_" followed by alphanumeric characters',
 				{ itemIndex }
 			);
 		}
 
 		// Build query parameters for expand options
-		const queryParams: string[] = [];
-		if (additionalOptions.expand_card) {
-			queryParams.push('expand[]=card');
-		}
-		if (additionalOptions.expand_emi) {
-			queryParams.push('expand[]=emi');
-		}
-		if (additionalOptions.expand_offers) {
-			queryParams.push('expand[]=offers');
-		}
-		if (additionalOptions.expand_upi) {
-			queryParams.push('expand[]=upi');
-		}
+		const expand = [
+			additionalOptions.expand_card ? 'card' : undefined,
+			additionalOptions.expand_emi ? 'emi' : undefined,
+			additionalOptions.expand_offers ? 'offers' : undefined,
+			additionalOptions.expand_upi ? 'upi' : undefined,
+		].filter((value): value is string => value !== undefined);
 
-		const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-		const url = `https://api.razorpay.com/v1/payments/${paymentId}${queryString}`;
+		const url = buildApiUrl(appendPathSegment(API_ENDPOINTS.PAYMENTS, paymentId), {
+			'expand[]': expand,
+		});
 
 		// Make API request using n8n's authentication helper
 		const options: IHttpRequestOptions = {

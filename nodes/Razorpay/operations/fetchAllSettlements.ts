@@ -1,6 +1,7 @@
 import type { INodeProperties, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import { getUserAgent } from '../utils';
+import { buildApiUrl, getUserAgent, toBoundedInteger } from '../utils';
+import { API_ENDPOINTS, LIST_QUERY_LIMITS } from '../constants';
 import type { SettlementListResponse, FetchOptions } from '../types';
 
 export const fetchAllSettlementsDescription: INodeProperties[] = [
@@ -69,53 +70,25 @@ export async function executeFetchAllSettlements(
 	try {
 		const additionalOptions = this.getNodeParameter('additionalOptions', itemIndex, {}) as FetchOptions;
 
-		// Build query parameters
-		const queryParams: string[] = [];
-		
-		if (additionalOptions.from) {
-			// Validate timestamp range
-			const fromTimestamp = Number(additionalOptions.from);
-			if (fromTimestamp < 946684800 || fromTimestamp > 4765046400) {
-				throw new NodeOperationError(
-					this.getNode(),
-					'From timestamp must be between 946684800 and 4765046400',
-					{ itemIndex }
-				);
-			}
-			queryParams.push(`from=${fromTimestamp}`);
-		}
+		const { MIN_SETTLEMENT_TIMESTAMP, MAX_SETTLEMENT_TIMESTAMP } = LIST_QUERY_LIMITS;
+		const query = {
+			from: additionalOptions.from
+				? toBoundedInteger(additionalOptions.from, 'From timestamp', MIN_SETTLEMENT_TIMESTAMP, MAX_SETTLEMENT_TIMESTAMP)
+				: undefined,
+			to: additionalOptions.to
+				? toBoundedInteger(additionalOptions.to, 'To timestamp', MIN_SETTLEMENT_TIMESTAMP, MAX_SETTLEMENT_TIMESTAMP)
+				: undefined,
+			count:
+				additionalOptions.count && additionalOptions.count !== 10
+					? toBoundedInteger(additionalOptions.count, 'Count', LIST_QUERY_LIMITS.MIN_COUNT, LIST_QUERY_LIMITS.MAX_COUNT)
+					: undefined,
+			skip:
+				additionalOptions.skip
+					? toBoundedInteger(additionalOptions.skip, 'Skip', LIST_QUERY_LIMITS.MIN_SKIP, LIST_QUERY_LIMITS.MAX_SKIP) || undefined
+					: undefined,
+		};
 
-		if (additionalOptions.to) {
-			// Validate timestamp range
-			const toTimestamp = Number(additionalOptions.to);
-			if (toTimestamp < 946684800 || toTimestamp > 4765046400) {
-				throw new NodeOperationError(
-					this.getNode(),
-					'To timestamp must be between 946684800 and 4765046400',
-					{ itemIndex }
-				);
-			}
-			queryParams.push(`to=${toTimestamp}`);
-		}
-
-		if (additionalOptions.count && additionalOptions.count !== 10) {
-			const count = Number(additionalOptions.count);
-			if (count < 1 || count > 100) {
-				throw new NodeOperationError(
-					this.getNode(),
-					'Count must be between 1 and 100',
-					{ itemIndex }
-				);
-			}
-			queryParams.push(`count=${count}`);
-		}
-
-		if (additionalOptions.skip && additionalOptions.skip > 0) {
-			queryParams.push(`skip=${additionalOptions.skip}`);
-		}
-
-		const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
-		const url = `https://api.razorpay.com/v1/settlements/${queryString}`;
+		const url = buildApiUrl(`${API_ENDPOINTS.SETTLEMENTS}/`, query);
 
 		// Make API request using n8n's authentication helper
 		const options: IHttpRequestOptions = {
